@@ -1,12 +1,13 @@
 use anyhow as ah;
 
+use std::env::{self, args, Args};
+
 use std::collections::HashMap;
-use std::fs::{self, DirEntry, OpenOptions, ReadDir};
-use std::io::{self, BufRead, BufWriter, Read, Write};
-use std::path::{self, Path, PathBuf};
+use std::fs::{self, DirEntry, OpenOptions};
+use std::io::{BufWriter, Read, Write};
+use std::path::Path;
 
 mod macros;
-use macros::*;
 
 const CPU_FREQ_PATH: &str = "/sys/devices/system/cpu/cpufreq/";
 
@@ -22,6 +23,7 @@ fn collect_policy_paths() -> ah::Result<Vec<String>> {
         .collect())
 }
 
+#[derive(Default)]
 struct PolicyAttibutes {
     affected_cpus: String,
     base_frequency: String,
@@ -38,28 +40,6 @@ struct PolicyAttibutes {
     scaling_max_freq: String,
     scaling_min_freq: String,
     scaling_setspeed: String,
-}
-
-impl Default for PolicyAttibutes {
-    fn default() -> Self {
-        Self {
-            affected_cpus: String::new(),
-            base_frequency: String::new(),
-            cpuinfo_max_freq: String::new(),
-            cpuinfo_min_freq: String::new(),
-            cpuinfo_transition_latency: String::new(),
-            energy_performance_available_preferences: String::new(),
-            energy_performance_preference: String::new(),
-            related_cpus: String::new(),
-            scaling_available_governors: String::new(),
-            scaling_cur_freq: String::new(),
-            scaling_driver: String::new(),
-            scaling_governor: String::new(),
-            scaling_max_freq: String::new(),
-            scaling_min_freq: String::new(),
-            scaling_setspeed: String::new(),
-        }
-    }
 }
 
 struct FreqPolicy {
@@ -179,6 +159,12 @@ impl FreqPolicy {
     }
 
     fn set_scaling_governor(&self, value: &str) -> ah::Result<()> {
+        let mut available_governors = self.attributes.scaling_available_governors.split_whitespace();
+
+        if !available_governors.any(|g| g == value) {
+            ah::bail!("The governor requested ({}) is not available for this policy.\nAvailable governors: {}", value, self.attributes.scaling_available_governors);
+        }
+
         let file = OpenOptions::new()
             .write(true)
             .open(format!("{}/scaling_governor", self.directory))
@@ -189,6 +175,7 @@ impl FreqPolicy {
         if let Err(e) = writer.write_all(value.as_bytes()) {
             eprintln!("Error writing to file: {:?}", e);
         }
+
         Ok(())
     }
 
@@ -250,18 +237,159 @@ impl FreqPolicy {
     }
 }
 
-fn main() {
-    let x = collect_policy_paths().unwrap();
+#[derive(Debug, Clone)]
+struct Argument {
+    name: String,
+    value: Option<Vec<String>>,
+}
 
-    for e in x {
-        let pol = FreqPolicy::from_policy_path(&e).unwrap();
+fn collect_arguments(args: &Vec<String>, recognized: &Vec<String>) -> Vec<Argument> {
+    let mut arguments: Vec<Argument> = Vec::with_capacity(args.len());
+    let argument_iterator = args.iter().peekable();
 
-        println!("::: Policy Directory: {}", pol.directory);
-        println!("Governor: {}", pol.attributes.scaling_governor);
-        println!("Min Scaling: {}", pol.attributes.scaling_min_freq);
-        println!("Max Scaling: {}", pol.attributes.scaling_max_freq);
-        println!("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+    let mut latest_argument: Option<Argument> = None;
+
+    for argument in argument_iterator {
+        let is_recognized = recognized.contains(argument);
+
+        if is_recognized {
+            if let Some(previous) = latest_argument {
+                arguments.push(previous);
+            }
+
+            latest_argument = Some(Argument {
+                name: argument.clone(),
+                value: None,
+            });
+
+            continue;
+        } 
+
+        let latest_argument: &mut Argument = {
+            match &mut latest_argument {
+                Some(v) => v,
+                None => continue,
+            }
+        };
+
+        if let Some(value) = &mut latest_argument.value {
+            value.push(argument.clone());
+        } else {
+            latest_argument.value = Some(vec![argument.clone()]);
+        }
     }
 
-    println!("Hello, world!");
+    if let Some(previous) = latest_argument {
+        arguments.push(previous);
+    }
+
+    arguments
+}
+
+
+fn main() {
+    let policy_dirs = collect_policy_paths().expect("Couldn't collect policies. (Try running as root?)");
+
+    let policy_managers = policy_dirs
+        .iter()
+        .map(|path| FreqPolicy::from_policy_path(path).unwrap())
+        .collect::<Vec<FreqPolicy>>();
+
+    let RECOGNIZED_ARGUMENTS: Vec<String> = vec![
+        "--set-scmax",
+        "--set-scmin",
+        "--set-governor",
+        "--get-governor",
+        "--list-governors",
+        "--get-scmax",
+        "--get-scmin",
+        "--get-rmax",
+        "--get-rmin"
+    ]
+
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
+
+    let arguments = std::env::args().collect::<Vec<String>>();
+    // println!("Arguments Env: {:?}", arguments);
+
+    let arguments = collect_arguments(&arguments, &RECOGNIZED_ARGUMENTS);
+    // println!("Arguments: {:?}", arguments);
+    
+
+    for (_index, argument) in arguments.iter().enumerate() {
+        if let Some(values) = &argument.value {
+            let argument_name = argument.name.as_ref();
+
+
+            let _first_value = {
+                match values.first() {
+                    Some(value) => value,
+                    None => continue,
+                }
+            };
+
+            match argument_name {
+                "--set-scmax" => {
+                    let value = values.first().expect("Couldn't get value for --set-scmax");
+
+                    for policy_manager in policy_managers.iter() {
+                        policy_manager.set_scaling_max_freq(&value).unwrap();
+                    }
+                }
+
+                "--set-scmin" => {
+                    let value = values.first().expect("Couldn't get value for --set-scmin");
+
+                    for policy_manager in policy_managers.iter() {
+                        policy_manager.set_scaling_min_freq(&value).unwrap();
+                    }
+                }
+
+                "--set-governor" => {
+                    let value = values.first().expect("Couldn't get value for --set-governor");
+
+                    for policy_manager in policy_managers.iter() {
+                        policy_manager.set_scaling_governor(&value).unwrap();
+                    }
+                }
+
+                "--get-governor" => {
+                    for policy_manager in policy_managers.iter() {
+                        println!("{} - {}", policy_manager.directory, policy_manager.attributes.scaling_governor);
+                    }
+                }
+                
+                "--get-scmax" => {
+                    for policy_manager in policy_managers.iter() {
+                        println!("{} - {}", policy_manager.directory, policy_manager.attributes.scaling_max_freq);
+                    }
+                }
+
+                "--get-scmin" => {
+                    for policy_manager in policy_managers.iter() {
+                        println!("{} - {}", policy_manager.directory, policy_manager.attributes.scaling_min_freq);
+                    }
+                }
+
+                "--get-rmax" => {
+                    for policy_manager in policy_managers.iter() {
+                        println!("{} - {}", policy_manager.directory, policy_manager.attributes.cpuinfo_max_freq);
+                    }
+                }
+
+                "--get-rmin" => {
+                    for policy_manager in policy_managers.iter() {
+                        println!("{} - {}", policy_manager.directory, policy_manager.attributes.cpuinfo_min_freq);
+                    }
+                }
+
+                _ => { 
+                    println!("Unrecognized argument: {}", argument_name);
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
 }
