@@ -1,6 +1,6 @@
 use anyhow as ah;
 
-use std::env::{self, args, Args};
+
 
 use std::collections::HashMap;
 use std::fs::{self, DirEntry, OpenOptions};
@@ -295,8 +295,7 @@ fn main() {
         .map(|path| FreqPolicy::from_policy_path(path).unwrap())
         .collect::<Vec<FreqPolicy>>();
 
-    let RECOGNIZED_ARGUMENTS: Vec<String> = vec![
-        "--set-scmax",
+    let RECOGNIZED_ARGUMENTS: Vec<String> = ["--set-scmax",
         "--set-scmin",
         "--set-governor",
         "--get-governor",
@@ -304,8 +303,7 @@ fn main() {
         "--get-scmax",
         "--get-scmin",
         "--get-rmax",
-        "--get-rmin"
-    ]
+        "--get-rmin"]
 
     .iter()
     .map(|s| s.to_string())
@@ -335,7 +333,7 @@ fn main() {
                     let value = values.first().expect("Couldn't get value for --set-scmax");
 
                     for policy_manager in policy_managers.iter() {
-                        policy_manager.set_scaling_max_freq(&value).unwrap();
+                        policy_manager.set_scaling_max_freq(value).unwrap();
                     }
                 }
 
@@ -343,7 +341,7 @@ fn main() {
                     let value = values.first().expect("Couldn't get value for --set-scmin");
 
                     for policy_manager in policy_managers.iter() {
-                        policy_manager.set_scaling_min_freq(&value).unwrap();
+                        policy_manager.set_scaling_min_freq(value).unwrap();
                     }
                 }
 
@@ -351,7 +349,7 @@ fn main() {
                     let value = values.first().expect("Couldn't get value for --set-governor");
 
                     for policy_manager in policy_managers.iter() {
-                        policy_manager.set_scaling_governor(&value).unwrap();
+                        policy_manager.set_scaling_governor(value).unwrap();
                     }
                 }
 
