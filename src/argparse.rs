@@ -2,7 +2,7 @@ use anyhow as ah;
 use std::env::{self};
 
 use crate::{
-    frequency::{self, Frequency},
+    frequency::{Frequency},
     policies::PolicyDir,
     CPU_FREQ_PATH,
 };
@@ -104,7 +104,7 @@ pub fn parse_policy_ident(_ident: &str) {
 }
 
 pub fn parse_freq_value(freq_str: &str) -> ah::Result<(Option<Frequency>, Option<Frequency>)> {
-    let freq_str = freq_str.replace(",", "");
+    let freq_str = freq_str.replace(',', "");
     let parts: Vec<&str> = freq_str.split(':').collect();
 
     if parts.len() < 2 {
