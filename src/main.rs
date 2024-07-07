@@ -1,16 +1,13 @@
 use anyhow as ah;
 
-
-
 use std::collections::HashMap;
 use std::fs::{self, DirEntry, OpenOptions};
 use std::io::{BufWriter, Read, Write};
 use std::path::Path;
 
-pub mod macros;
 pub mod argparse;
-pub mod actions;
 pub mod frequency;
+pub mod macros;
 pub mod policies;
 
 pub mod globals;
@@ -29,7 +26,10 @@ fn collect_policy_paths() -> ah::Result<Vec<String>> {
 }
 
 fn filter_non_numbers(input: &str) -> String {
-    input.chars().filter(|c| c.is_ascii_digit()).collect::<String>()
+    input
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .collect::<String>()
 }
 
 #[derive(Default)]
@@ -168,7 +168,10 @@ impl FreqPolicy {
     }
 
     fn set_scaling_governor(&self, value: &str) -> ah::Result<()> {
-        let mut available_governors = self.attributes.scaling_available_governors.split_whitespace();
+        let mut available_governors = self
+            .attributes
+            .scaling_available_governors
+            .split_whitespace();
 
         if !available_governors.any(|g| g == value) {
             ah::bail!("The governor requested ({}) is not available for this policy.\nAvailable governors: {}", value, self.attributes.scaling_available_governors);
@@ -189,7 +192,9 @@ impl FreqPolicy {
     }
 
     fn set_scaling_max_freq(&self, value: &str) -> ah::Result<()> {
-        let maximum = filter_non_numbers(self.attributes.cpuinfo_max_freq.as_str()).parse::<u64>().unwrap();
+        let maximum = filter_non_numbers(self.attributes.cpuinfo_max_freq.as_str())
+            .parse::<u64>()
+            .unwrap();
         let value_u64 = filter_non_numbers(value).parse::<u64>().unwrap();
 
         if value_u64 > maximum {
@@ -210,7 +215,9 @@ impl FreqPolicy {
     }
 
     fn set_scaling_min_freq(&self, value: &str) -> ah::Result<()> {
-        let minimum = filter_non_numbers(&self.attributes.cpuinfo_min_freq).parse::<u64>().unwrap();
+        let minimum = filter_non_numbers(&self.attributes.cpuinfo_min_freq)
+            .parse::<u64>()
+            .unwrap();
         let value_u64 = filter_non_numbers(value).parse::<u64>().unwrap();
 
         if value_u64 < minimum {
@@ -272,7 +279,7 @@ fn collect_arguments(args: &Vec<String>, recognized: &Vec<String>) -> Vec<Argume
             });
 
             continue;
-        } 
+        }
 
         let latest_argument: &mut Argument = {
             match &mut latest_argument {
@@ -311,7 +318,8 @@ const HELP_TEXT: &str = "
 ";
 
 fn main() {
-    let policy_dirs = collect_policy_paths().expect("Couldn't collect policies. (Try running as root?)");
+    let policy_dirs =
+        collect_policy_paths().expect("Couldn't collect policies. (Try running as root?)");
 
     let policy_managers = policy_dirs
         .iter()
@@ -336,8 +344,9 @@ fn main() {
         "--get-rmin",
         "-grm",
         "--help",
-        "-h"
-    ].iter()
+        "-h",
+    ]
+    .iter()
     .map(|s| s.to_string())
     .collect();
 
@@ -350,7 +359,6 @@ fn main() {
         println!("{}", HELP_TEXT);
         std::process::exit(1);
     }
-    
 
     for (_index, argument) in arguments.iter().enumerate() {
         let argument_name = argument.name.as_ref();
@@ -366,32 +374,44 @@ fn main() {
                     print!("{}", policy_manager.attributes.scaling_governor);
                 }
             }
-            
+
             "--get-csmax" | "-gcx" => {
                 for policy_manager in policy_managers.iter() {
-                    print!("{} - {}", policy_manager.directory, policy_manager.attributes.scaling_max_freq);
+                    print!(
+                        "{} - {}",
+                        policy_manager.directory, policy_manager.attributes.scaling_max_freq
+                    );
                 }
             }
 
             "--get-csmin" | "-gcm" => {
                 for policy_manager in policy_managers.iter() {
-                    print!("{} - {}", policy_manager.directory, policy_manager.attributes.scaling_min_freq);
+                    print!(
+                        "{} - {}",
+                        policy_manager.directory, policy_manager.attributes.scaling_min_freq
+                    );
                 }
             }
 
             "--get-rmax" | "-grx" => {
                 for policy_manager in policy_managers.iter() {
-                    print!("{} - {}", policy_manager.directory, policy_manager.attributes.cpuinfo_max_freq);
+                    print!(
+                        "{} - {}",
+                        policy_manager.directory, policy_manager.attributes.cpuinfo_max_freq
+                    );
                 }
             }
 
             "--get-rmin" | "-grm" => {
                 for policy_manager in policy_managers.iter() {
-                    print!("{} - {}", policy_manager.directory, policy_manager.attributes.cpuinfo_min_freq);
+                    print!(
+                        "{} - {}",
+                        policy_manager.directory, policy_manager.attributes.cpuinfo_min_freq
+                    );
                 }
             }
 
-            _ => ()
+            _ => (),
         }
 
         if let Some(values) = &argument.value {
@@ -403,13 +423,15 @@ fn main() {
             };
 
             match argument_name {
-
                 "--set-csmax" | "-scx" => {
                     let value = values.first().expect("Couldn't get value for --set-scmax");
 
                     for policy_manager in policy_managers.iter() {
                         policy_manager.set_scaling_max_freq(value).unwrap();
-                        print!("Setting {} max frequency to {}", policy_manager.directory, policy_manager.attributes.scaling_max_freq)
+                        print!(
+                            "Setting {} max frequency to {}",
+                            policy_manager.directory, policy_manager.attributes.scaling_max_freq
+                        )
                     }
                 }
 
@@ -418,24 +440,31 @@ fn main() {
 
                     for policy_manager in policy_managers.iter() {
                         policy_manager.set_scaling_min_freq(value).unwrap();
-                        print!("Setting {} min frequency to {}", policy_manager.directory, policy_manager.attributes.scaling_min_freq)
+                        print!(
+                            "Setting {} min frequency to {}",
+                            policy_manager.directory, policy_manager.attributes.scaling_min_freq
+                        )
                     }
                 }
 
                 "--set-gov" | "-sg" => {
-                    let value = values.first().expect("Couldn't get value for --set-governor");
+                    let value = values
+                        .first()
+                        .expect("Couldn't get value for --set-governor");
 
                     for policy_manager in policy_managers.iter() {
                         policy_manager.set_scaling_governor(value).unwrap();
-                        print!("Setting {} governor to {}", policy_manager.directory, policy_manager.attributes.scaling_governor)
+                        print!(
+                            "Setting {} governor to {}",
+                            policy_manager.directory, policy_manager.attributes.scaling_governor
+                        )
                     }
                 }
 
-
-                _ => { 
+                _ => {
                     println!("Unrecognized argument: {}", argument_name);
                     println!("Ignoring it.");
-                    continue
+                    continue;
                 }
             }
         }

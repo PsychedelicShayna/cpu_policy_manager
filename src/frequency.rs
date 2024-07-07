@@ -1,5 +1,3 @@
-
-
 #[derive(Debug, Clone, Copy)]
 pub enum Frequency {
     GHz(f64),
