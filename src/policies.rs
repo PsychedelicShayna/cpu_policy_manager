@@ -2,7 +2,7 @@ use crate::{frequency::Frequency, CPU_FREQ_PATH};
 
 use strum_macros::AsRefStr;
 
-use anyhow as ah;
+use anyhow::{self as ah, anyhow, bail};
 use std::fs::{self, read_dir, DirEntry};
 
 use std::path::{Path, PathBuf};
@@ -111,14 +111,14 @@ impl PolicyDir {
         let path = Path::new(path);
 
         if !path.exists() {
-            ah::bail!("The provided path '{}' doesn't exist.", path.display());
+            bail!("The provided path '{}' doesn't exist.", path.display());
         }
 
         if !path.is_dir() {
-            ah::bail!("The provided path '{}' wasn't a directory.", path.display());
+            bail!("The provided path '{}' wasn't a directory.", path.display());
         }
 
-        let entries = read_dir(path)?.collect::<Result<Vec<DirEntry>, std::io::Error>>()?;
+        let entries: Vec<DirEntry> = read_dir(path)?.collect::<ah::Result<Vec<_>, std::io::Error>>()?;
 
         let policy_dir_paths: Vec<String> = entries
             .into_iter()
@@ -144,8 +144,8 @@ impl PolicyDir {
 
         policy_dir_paths
             .into_iter()
-            .map(|path| Self::from(&path))
-            .collect::<Result<Vec<Self>, _>>()
+            .map(|path| Self::from(&path)) // Assuming Self::from returns ah::Result<Self, _>
+            .collect::<ah::Result<Vec<Self>, _>>()
     }
 
     /// Returns the available governors from the scaling_available_governors file.
