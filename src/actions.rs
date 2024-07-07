@@ -31,7 +31,7 @@ impl Frequency {
 }
 
 // Writes the frequency to every CPU core policy.
-pub fn set_freq(frequency: u32) -> ah::Result<()> {
+pub fn set_freq(_frequency: u32) -> ah::Result<()> {
 
 
     todo!();

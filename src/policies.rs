@@ -2,7 +2,7 @@ use crate::{frequency::Frequency, CPU_FREQ_PATH};
 
 use strum_macros::AsRefStr;
 
-use anyhow::{self as ah, anyhow, bail};
+use anyhow::{self as ah, bail};
 use std::fs::{self, read_dir, DirEntry};
 
 use std::path::{Path, PathBuf};
@@ -92,7 +92,7 @@ impl PolicyDir {
 
         let policy_number = name_trimmed
             .chars()
-            .all(|c| c.is_digit(10))
+            .all(|c| c.is_ascii_digit())
             .then(|| name_trimmed.parse::<u32>())
             .ok_or(ah::anyhow!(
                 "The policy number '{:?}' couldn't be parsed as a u32.",
@@ -133,7 +133,7 @@ impl PolicyDir {
                 if !entry_name
                     .trim_start_matches("policy")
                     .chars()
-                    .all(|c| c.is_digit(10))
+                    .all(|c| c.is_ascii_digit())
                 {
                     return None;
                 }

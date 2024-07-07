@@ -29,7 +29,7 @@ fn collect_policy_paths() -> ah::Result<Vec<String>> {
 }
 
 fn filter_non_numbers(input: &str) -> String {
-    input.chars().into_iter().filter(|c| c.is_digit(10)).collect::<String>()
+    input.chars().filter(|c| c.is_ascii_digit()).collect::<String>()
 }
 
 #[derive(Default)]
@@ -345,7 +345,7 @@ fn main() {
     let arguments = collect_arguments(&arguments, &RECOGNIZED_ARGUMENTS);
     //
 
-    if arguments.len() < 1 {
+    if arguments.is_empty() {
         eprintln!("Missing arguments! Use --help or -h for usage.");
         println!("{}", HELP_TEXT);
         std::process::exit(1);

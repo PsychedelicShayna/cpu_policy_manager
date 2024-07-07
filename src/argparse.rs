@@ -1,9 +1,9 @@
-use ah::bail;
-use anyhow as ah;
-use std::env::{self, args, Args};
 
-use crate::frequency::Frequency;
-use crate::policies::{PolicyDir, PolicyFile};
+use anyhow as ah;
+use std::env::{self};
+
+
+use crate::policies::{PolicyDir};
 
 // For frequencies
 // ----------------------------------------------------------------------------------------------------
@@ -93,9 +93,9 @@ use crate::policies::{PolicyDir, PolicyFile};
 
 // Now how do we parse the input and direct it to appropriate functions..
 
-pub fn set_freq_operation(policy: PolicyDir, desired: String) {}
+pub fn set_freq_operation(_policy: PolicyDir, _desired: String) {}
 
-pub fn parse_policy_ident(ident: &str) {
+pub fn parse_policy_ident(_ident: &str) {
 
     // could be 0:4
     // could be 4,2,6
@@ -111,11 +111,11 @@ pub fn parse_arguments() -> ah::Result<()> {
 
     let parts: Vec<String> = arg_iter.take(2).collect();
 
-    let action = parts.get(0).ok_or(ah::anyhow!(
+    let action = parts.first().ok_or(ah::anyhow!(
         "Index 0 of operation parts was empty; missing an action."
     ))?;
 
-    let policy = parts.get(1).ok_or(ah::anyhow!(
+    let _policy = parts.get(1).ok_or(ah::anyhow!(
         "Index 1 of operation parts was empty; missing a target policy."
     ))?;
 
