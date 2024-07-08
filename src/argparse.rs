@@ -275,7 +275,7 @@ pub fn op_get(
 
             ("gov", "avail" | "available") => {
                 let available_govs = policy_dir.read_available_governors()?;
-                let mut govs = "Policy {} available governors...\n\n".to_string();
+                let mut govs = format!("Policy {} available governors...\n\n", policy_dir.policy_number);
 
                 for (i, gov) in available_govs.iter().enumerate() {
                     govs += &format!("{}.) - {}\n", i, gov);
@@ -294,7 +294,7 @@ pub fn op_get(
 
             ("perf", "avail" | "available") => {
                 let available_profiles = policy_dir.read_available_perf_profiles()?;
-                let mut perfs = "Policy {} available performance profiles...\n\n".to_string();
+                let mut perfs = format!("Policy {} available performance profiles...\n\n", policy_dir.policy_number);
 
                 for (i, perf) in available_profiles.iter().enumerate() {
                     perfs += &format!("{}.) - {}\n", i, perf);
@@ -314,6 +314,10 @@ pub fn op_get(
         }
     }
 
+    for line in output {
+        println!("{}", line);
+    }
+
     Ok(())
 }
 
@@ -322,6 +326,9 @@ pub fn parse_arguments() -> ah::Result<()> {
     let mut arg_iter: std::vec::IntoIter<String> = arguments.into_iter();
     let policy_dirs = PolicyDir::collect_from_dir(CPU_FREQ_PATH)?;
 
+    // Ignore the first argument, since it's the path to the binary.
+    arg_iter.next();
+
     let first = arg_iter
         .next()
         .ok_or(ah::anyhow!("No arguments provided."))?;
@@ -329,7 +336,7 @@ pub fn parse_arguments() -> ah::Result<()> {
     match first.as_str() {
         "set" => op_set(policy_dirs, &mut arg_iter)?,
         "get" => op_get(policy_dirs, &mut arg_iter)?,
-        _ => (),
+        a => println!("Unrecognized: {}", a)
     };
 
     Ok(())
