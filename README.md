@@ -1,5 +1,7 @@
 # CPU Policy Manager (CPM)
-A utility to easily control CPU frequency policies on Linux from the CLI. After auto-cpufreq broke after an Arch update, I just decided to write my own manager, and not have it be a daemon but a CLI utility. This project is still young. The help text should provide you with a general idea of its purpose.
+A CLI utility to easily control CPU frequency policies on Linux from the terminal. After `auto-cpufreq` broke after an Arch update, I just decided to write my own solution, and not have it be a daemon but a utility to easily write fixed configurations. This project is still young. The help text should provide you with a general idea of its purpose.
+
+State: incomplete, but functional.
 
 ```
 Setting Values:
