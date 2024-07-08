@@ -3,6 +3,28 @@ A CLI utility to easily control CPU frequency policies on Linux from the termina
 
 State: incomplete, but functional.
 
+A simple example to set the desired minimum and maximum frequency of your CPU.
+```
+sudo cpm set all freq 1.5:4.5         # GHz by default, suffixes supported, and comas ignored for convenience.
+sudo cpm set all freq :3,500,000      # Only sets the max frequency, and defaults to KHz when no periods are present.
+sudo cpm set all freq :3.5            # Equivalent to the above.
+sudo cpm set all freq 800,000:        # Sets the minimum frequency to 0.8 GHz
+```
+
+Or to retrieve available governors and change the active one.
+```
+cpm get 0 gov avail
+sudo cpm set all gov powersave
+```
+
+Or to view the current CPU frequency of all your cores.
+```
+cpm get all freq curr
+```
+
+You get the idea.
+
+Here's the verbose description:
 ```
 Setting Values:
 cpm set <policies> <attribute> <value>
