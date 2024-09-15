@@ -29,12 +29,15 @@ Here's the verbose description:
 Setting Values:
 cpm set <policies> <attribute> <value>
 
+Example:
+    cpm set all freq 3.0:4.5
+        Sets the min and max frequency for all governors to 3.0 and 4.5
+
 <policies> format:
     0     - A single policy number.
     0:4   - A range of policy numbers.
     0,2,5 - Specific policy number.
-
-    (all | *) - Every policy.
+    all|* - Affects every policy.
 
 <attribute> format:
     freq - CPU Frequency
@@ -81,10 +84,10 @@ cpm set <policies> <attribute> <value>
 
         Then set it like this
             cpm set all perf balance_performance
-        
+
 
 Getting Values:
-    cpm set <policies> <attribute> <value> 
+    cpm set <policies> <attribute> <value>
 
     <policies> format:
         0     - A single policy number.
@@ -103,5 +106,7 @@ Getting Values:
         gov:  (curr | current), (avail | available)
         perf: (curr | current), (avail | available)
 
-
+        freq: min, max, (curr | current)
+        gov:  (curr | current), (avail | available)
+        perf: (curr | current), (avail | available)
 ```
