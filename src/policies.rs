@@ -237,14 +237,14 @@ impl PolicyDir {
     pub fn set_scaling_max_freq(&self, frequency: &Frequency) -> ah::Result<()> {
         let desired_scaling_max = frequency.to_khz();
 
-        // Desired scaling_max frequency cannot be lower than the scaling_min.
-        let scaling_min = self.read_scaling_min_freq()?.to_khz();
+        // Desired scaling_max frequency cannot be lower than the rated_min.
+        let rated_min = self.read_rated_min_freq()?.to_khz();
 
-        if u64::from(desired_scaling_max) < u64::from(scaling_min) {
+        if u64::from(desired_scaling_max) < u64::from(rated_min) {
             ah::bail!(
-                "The desired scaling_max frequency '{}' is lower than the current scaling_min '{}'",
+                "The desired scaling_max frequency '{}' is lower than the rated minimum '{}'",
                 desired_scaling_max.to_ghz(),
-                scaling_min.to_ghz()
+                rated_min.to_ghz()
             );
         }
 

@@ -1,11 +1,3 @@
-use anyhow as ah;
-
-use std::collections::HashMap;
-use std::env;
-use std::fs::{self, DirEntry, OpenOptions};
-use std::io::{BufWriter, Read, Write};
-use std::path::Path;
-
 pub mod argparse;
 pub mod frequency;
 pub mod macros;
@@ -20,12 +12,15 @@ const HELP_TEXT: &str = "
 Setting Values:
 cpm set <policies> <attribute> <value>
 
+Example:
+    cpm set all freq 3.0:4.5
+        Sets the min and max frequency for all governors to 3.0 and 4.5
+
 <policies> format:
     0     - A single policy number.
     0:4   - A range of policy numbers.
     0,2,5 - Specific policy number.
-
-    (all | *) - Every policy.
+    all|* - Affects every policy.
 
 <attribute> format:
     freq - CPU Frequency
